@@ -1,0 +1,6 @@
+folders:
+  log: ./log
+  screenshots: ./screenshots
+database:
+  host: localhost
+  db_name: postgres
