@@ -17,7 +17,7 @@ def main():
     init(config)
     credentials = helper.get_credentials('./credentials.local')
 
-    # DB Exaple
+    # DB Example
     conn = pydb.connect(config, credentials)
     cur = conn.cursor()
     cur.execute('select current_timestamp')

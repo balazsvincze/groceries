@@ -1,8 +1,10 @@
 import logging
 import os
 import json
-from datetime import datetime
 import yaml
+import psycopg2
+import logging
+from datetime import datetime
 
 
 def get_config(config_path='./config.yaml'):
@@ -38,6 +40,25 @@ def create_logger(logger, log_level, formatter, log_file=None):
     log_handler.setLevel(log_level)
     log_handler.setFormatter(formatter)
     logger.addHandler(log_handler)
+
+
+def connect(config, credentials):
+    conn = None
+    try:
+        logging.info('Connecting to the PostgreSQL database...')
+        return psycopg2.connect(host=config['database']['host'], 
+                                dbname=config['database']['db_name'], 
+                                user=credentials['user'], 
+                                password=credentials['password'])
+ 
+    except (Exception, psycopg2.DatabaseError) as error:
+        logging.error(error)
+
+
+def connect_teardown(conn):
+    if conn is not None:
+        conn.close()
+        logging.info('Database connection closed.')
 
 
 def save_screenshot(driver, config, counter, file_prefix):
