@@ -4,3 +4,5 @@ folders:
 database:
   host: localhost
   db_name: postgres
+tesco:
+  

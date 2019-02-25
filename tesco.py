@@ -2,7 +2,6 @@ import pandas
 import requests
 import logging
 from bs4 import BeautifulSoup
-# from tabulate import tabulate
 
 
 def get_url_content(url):
@@ -34,25 +33,37 @@ def get_items(soup):
         measurement = attr.find('span',{'class':'weight'})
         if measurement:
             measurement = measurement.text
-        
+
         df = df.append({'Name':[name],'Price1':[price_per_unit],'Price2':[price_per_weight],'Measurement':[measurement],'Category':[category.text],'Store':['Tesco']}, ignore_index=True)
-        # print(name, price_per_unit, price_per_weight, measurement)
     
     return df
 
-base_url = "https://bevasarlas.tesco.hu/groceries/hu-HU/shop/"
-temp_list = ['hus-hal-felvagott/all', 'zoldseg-gyumolcs/all']
-page_number = 1
 
-for link_end in temp_list:
-    link = f'{base_url}{link_end}?page={page_number}'
-    print(link)
-    soup = BeautifulSoup(get_url_content(link),'html.parser')
-    empty_pagination_button = soup.find('a',{'class':'pagination--button prev-next disabled'})
-    if page_number == 1:
-        data = get_items(soup)
-        page_number += 1
-    elif page_number != 1 and not empty_pagination_button:
-        data = get_items(soup)
-        page_number += 1
-    print (data)
+def scrape_tesco():
+    base_url = "https://bevasarlas.tesco.hu/groceries/hu-HU/shop/"
+    temp_list = ['zoldseg-gyumolcs/all','hus-hal-felvagott/all','alapveto-elelmiszerek/all','fagyasztott-elelmiszerek/all','italok/all','alkohol/all']
+    df = pandas.DataFrame(columns=['Name','Price1','Price2','Measurement','Category','Store'])
+
+    for link_end in temp_list:
+        page_number = 1
+        empty_pagination_button = ""
+
+        if page_number == 1:
+            link = f'{base_url}{link_end}?page={page_number}'
+            print(link)
+            soup = BeautifulSoup(get_url_content(link),'html.parser')
+            data = get_items(soup)
+            page_number += 1
+            df = df.append(data)
+
+        while (page_number != 1 and not empty_pagination_button):
+            link = f'{base_url}{link_end}?page={page_number}'
+            print(link)
+            soup = BeautifulSoup(get_url_content(link),'html.parser')
+            empty_pagination_button = soup.find('a',{'class':'pagination--button prev-next disabled'})
+            data = get_items(soup)
+            page_number += 1
+            df = df.append(data)
+    
+    df = df.reset_index(drop=True)
+    print(df)
