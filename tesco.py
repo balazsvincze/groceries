@@ -1,7 +1,9 @@
 import pandas
 import requests
+import logging
 from bs4 import BeautifulSoup
 # from tabulate import tabulate
+
 
 def get_url_content(url):
     r = requests.get(url)
@@ -9,10 +11,12 @@ def get_url_content(url):
 
 
 def get_items(soup):
+    category = soup.find('h1',{'class':'heading query'})
+
     unordered_list = soup.find('ul',{'class':'product-list grid'})
     product = unordered_list.find_all('li',{'class':'product-list--list-item'})
 
-    df = pandas.DataFrame(columns=['Name','Price1','Price2','Measurement'])
+    df = pandas.DataFrame(columns=['Name','Price1','Price2','Measurement','Category','Store'])
 
     for attr in product:
         #Get the name of the item
@@ -31,38 +35,24 @@ def get_items(soup):
         if measurement:
             measurement = measurement.text
         
-        df = df.append({'Name':[name],'Price1':[price_per_unit],'Price2':[price_per_weight],'Measurement':[measurement]}, ignore_index=True)
+        df = df.append({'Name':[name],'Price1':[price_per_unit],'Price2':[price_per_weight],'Measurement':[measurement],'Category':[category.text],'Store':['Tesco']}, ignore_index=True)
         # print(name, price_per_unit, price_per_weight, measurement)
-    print(df)
-
-
-def get_table_contents(soup):
-    table = soup.find_all('table')
-    for i in range(len(table)):
-        df = pandas.read_html(str(table[i]))
-        print(df)
-
-    # print(table)
-    # print(len(table))
-    # print(type(table))
-
-    # df = pandas.read_html(str(table))
-    # print(df)
     
-    # Create a list
-    # destination = df["Hová"].tolist()
-    # print(destination)
+    return df
 
-    # Print as an ascii table
-    # print(tabulate(df[0], headers='keys', tablefmt='psql'))
+base_url = "https://bevasarlas.tesco.hu/groceries/hu-HU/shop/"
+temp_list = ['hus-hal-felvagott/all', 'zoldseg-gyumolcs/all']
+page_number = 1
 
-
-def main():
-    url = "https://bevasarlas.tesco.hu/groceries/hu-HU/shop/zoldseg-gyumolcs/gyumolcsok/deligyumolcsok"
-
-    soup = BeautifulSoup(get_url_content(url),'html.parser')
-
-    get_items(soup)
-
-if __name__ == "__main__":
-    main()
+for link_end in temp_list:
+    link = f'{base_url}{link_end}?page={page_number}'
+    print(link)
+    soup = BeautifulSoup(get_url_content(link),'html.parser')
+    empty_pagination_button = soup.find('a',{'class':'pagination--button prev-next disabled'})
+    if page_number == 1:
+        data = get_items(soup)
+        page_number += 1
+    elif page_number != 1 and not empty_pagination_button:
+        data = get_items(soup)
+        page_number += 1
+    print (data)

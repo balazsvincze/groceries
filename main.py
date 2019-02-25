@@ -15,14 +15,7 @@ def init(config):
 def main():
     config = helper.get_config()
     init(config)
-    credentials = helper.get_credentials('./credentials.local')
 
-    # DB Example
-    conn = pydb.connect(config, credentials)
-    cur = conn.cursor()
-    cur.execute('select current_timestamp')
-    print(cur.fetchall())
-    pydb.connect_teardown(conn)
 
 
 if __name__ == '__main__':
